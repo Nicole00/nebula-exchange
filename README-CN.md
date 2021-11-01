@@ -76,7 +76,7 @@ nebula-exchange-2.5.0.jar \
 ```
 $SPARK_HOME/bin/spark-submit --class com.vesoft.nebula.exchange.Exchange \
 --master local \
---conf spark.sql.shuffle.partition=200 \
+--conf spark.sql.shuffle.partitions=200 \
 nebula-exchange-2.5.0.jar \
 -c application.conf
 ```
