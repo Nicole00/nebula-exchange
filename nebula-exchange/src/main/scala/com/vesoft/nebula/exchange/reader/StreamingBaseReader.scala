@@ -6,7 +6,11 @@
 package com.vesoft.nebula.exchange.reader
 
 import com.vesoft.nebula.exchange.config.{KafkaSourceConfigEntry, PulsarSourceConfigEntry}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.catalyst.dsl.expressions.StringToAttributeConversionHelper
+import org.apache.spark.sql.functions.{col, get_json_object}
+import org.apache.spark.sql.{Column, DataFrame, SparkSession}
+
+import scala.collection.mutable.ListBuffer
 
 /**
   * Spark Streaming
@@ -31,11 +35,16 @@ class KafkaReader(override val session: SparkSession, kafkaConfig: KafkaSourceCo
   require(kafkaConfig.server.trim.nonEmpty && kafkaConfig.topic.trim.nonEmpty)
 
   override def read(): DataFrame = {
-    session.readStream
+    val df = session.readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", kafkaConfig.server)
       .option("subscribe", kafkaConfig.topic)
       .load()
+    val columns: ListBuffer[Column] = new ListBuffer[Column]
+    for (field <- kafkaConfig.fields) {
+      columns.append(get_json_object(col("value"), "$." + field).alias(field))
+    }
+    df.select(columns: _*)
   }
 }
 

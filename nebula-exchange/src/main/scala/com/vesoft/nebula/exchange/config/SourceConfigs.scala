@@ -166,7 +166,8 @@ case class MySQLSourceConfigEntry(override val category: SourceCategory.Value,
 case class KafkaSourceConfigEntry(override val category: SourceCategory.Value,
                                   override val intervalSeconds: Int,
                                   server: String,
-                                  topic: String)
+                                  topic: String,
+                                  fields: List[String])
     extends StreamingDataSourceConfigEntry {
   require(server.trim.nonEmpty && topic.trim.nonEmpty)
 
