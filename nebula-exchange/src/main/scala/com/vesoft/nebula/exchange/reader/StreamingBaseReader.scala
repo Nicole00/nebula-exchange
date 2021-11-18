@@ -41,7 +41,7 @@ class KafkaReader(override val session: SparkSession, kafkaConfig: KafkaSourceCo
       .option("subscribe", kafkaConfig.topic)
       .load()
     val columns: ListBuffer[Column] = new ListBuffer[Column]
-    for (field <- kafkaConfig.fields) {
+    for (field <- kafkaConfig.fields.distinct) {
       columns.append(get_json_object(col("value"), "$." + field).alias(field))
     }
     df.select(columns: _*)
