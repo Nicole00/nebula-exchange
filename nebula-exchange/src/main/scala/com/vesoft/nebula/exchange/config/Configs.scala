@@ -647,34 +647,43 @@ object Configs {
         val intervalSeconds =
           if (config.hasPath("interval.seconds")) config.getInt("interval.seconds")
           else DEFAULT_STREAM_INTERVAL
-        val valueFields: ListBuffer[String] = new ListBuffer[String]
+        val valueFields: ListBuffer[String]    = new ListBuffer[String]
+        val keyValueFields: ListBuffer[String] = new ListBuffer[String]
         valueFields.append(config.getStringList("fields").asScala: _*)
         if (config.hasPath("vertex")) {
           if (config.hasPath("vertex.field")) {
             valueFields.append(config.getString("vertex.field"))
+            keyValueFields.append(config.getString("vertex.field"))
           } else {
             valueFields.append(config.getString("vertex"))
+            keyValueFields.append(config.getString("vertex"))
           }
         } else {
           if (config.hasPath("source.field")) {
             valueFields.append(config.getString("source.field"))
+            keyValueFields.append(config.getString("source.field"))
           } else {
             valueFields.append(config.getString("source"))
+            keyValueFields.append(config.getString("source"))
           }
           if (config.hasPath("target.field")) {
             valueFields.append(config.getString("target.field"))
+            keyValueFields.append(config.getString("target.field"))
           } else {
             valueFields.append(config.getString("target"))
+            keyValueFields.append(config.getString("target"))
           }
           if (config.hasPath("ranking")) {
             valueFields.append(config.getString("ranking"))
+            keyValueFields.append(config.getString("ranking"))
           }
         }
         KafkaSourceConfigEntry(SourceCategory.KAFKA,
                                intervalSeconds,
                                config.getString("service"),
                                config.getString("topic"),
-                               valueFields.toList)
+                               valueFields.toList,
+                               keyValueFields.toList)
       case SourceCategory.PULSAR =>
         val options =
           config.getObject("options").unwrapped.asScala.map(x => x._1 -> x._2.toString).toMap

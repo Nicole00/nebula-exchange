@@ -100,6 +100,8 @@ class VerticesProcessor(data: DataFrame,
     graphProvider.close()
   }
 
+  private def processStreamingVertexEachPartition(): Unit = {}
+
   override def process(): Unit = {
 
     val address = config.databaseConfig.getMetaAddress
@@ -121,7 +123,7 @@ class VerticesProcessor(data: DataFrame,
       val spaceVidLen = metaProvider.getSpaceVidLen(space)
       val tagItem     = metaProvider.getTagItem(space, tagName)
 
-      data
+      val distinctData = data
         .dropDuplicates(tagConfig.vertexField)
         .mapPartitions { iter =>
           iter.map { row =>
@@ -177,8 +179,64 @@ class VerticesProcessor(data: DataFrame,
           }
         }(Encoders.tuple(Encoders.BINARY, Encoders.BINARY))
         .toDF("key", "value")
-        .sortWithinPartitions("key")
-        .foreachPartition { iterator: Iterator[Row] =>
+
+      if (data.isStreaming) {
+        distinctData.writeStream.foreachBatch((vertices, id) => {
+          vertices.sortWithinPartitions("key").foreachPartition {
+            iterator: Iterator[Row] =>
+              val taskID                  = TaskContext.get().taskAttemptId()
+              var writer: NebulaSSTWriter = null
+              var currentPart             = -1
+              val localPath               = fileBaseConfig.localPath
+              val remotePath              = fileBaseConfig.remotePath
+              try {
+                iterator.foreach {
+                  vertex =>
+                    val key   = vertex.getAs[Array[Byte]](0)
+                    val value = vertex.getAs[Array[Byte]](1)
+                    var part = ByteBuffer
+                      .wrap(key, 0, 4)
+                      .order(ByteOrder.nativeOrder)
+                      .getInt >> 8
+                    if (part <= 0) {
+                      part = part + partitionNum
+                    }
+
+                    if (part != currentPart) {
+                      if (writer != null) {
+                        writer.close()
+                        val localFile = s"$localPath/$currentPart-$taskID.sst"
+                        HDFSUtils.upload(localFile,
+                                         s"$remotePath/${currentPart}/$currentPart-$taskID.sst",
+                                         namenode)
+                        Files.delete(Paths.get(localFile))
+                      }
+                      currentPart = part
+                      val tmp = s"$localPath/$currentPart-$taskID.sst"
+                      writer = new NebulaSSTWriter(tmp)
+                      writer.prepare()
+                    }
+                    writer.write(key, value)
+                }
+              } catch {
+                case e: Throwable => {
+                  LOG.error(e)
+                  batchFailure.add(1)
+                }
+              } finally {
+                if (writer != null) {
+                  writer.close()
+                  val localFile = s"$localPath/$currentPart-$taskID.sst"
+                  HDFSUtils.upload(localFile,
+                                   s"$remotePath/${currentPart}/$currentPart-$taskID.sst",
+                                   namenode)
+                  Files.delete(Paths.get(localFile))
+                }
+              }
+          }
+        })
+      } else {
+        distinctData.sortWithinPartitions("key").foreachPartition { iterator: Iterator[Row] =>
           val taskID                  = TaskContext.get().taskAttemptId()
           var writer: NebulaSSTWriter = null
           var currentPart             = -1
@@ -221,13 +279,14 @@ class VerticesProcessor(data: DataFrame,
             if (writer != null) {
               writer.close()
               val localFile = s"$localPath/$currentPart-$taskID.sst"
-              HDFSUtils.upload(localFile,
-                               s"$remotePath/${currentPart}/$currentPart-$taskID.sst",
-                               namenode)
+              HDFSUtils
+                .upload(localFile, s"$remotePath/${currentPart}/$currentPart-$taskID.sst", namenode)
               Files.delete(Paths.get(localFile))
             }
           }
         }
+      }
+
     } else {
       val vertices = data
         .map { row =>
