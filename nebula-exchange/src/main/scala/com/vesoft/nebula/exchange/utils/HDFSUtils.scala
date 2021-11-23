@@ -53,6 +53,7 @@ object HDFSUtils {
   }
 
   def upload(localPath: String, remotePath: String, namenode: String = null): Unit = {
+    LOG.info("update sst file to hdfs")
     try {
       val localFile = new File(localPath)
       if (!localFile.exists() || localFile.length() <= 0) {

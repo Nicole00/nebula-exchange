@@ -45,13 +45,13 @@ class KafkaReader(override val session: SparkSession, kafkaConfig: KafkaSourceCo
 
     val columns: ListBuffer[Column] = new ListBuffer[Column]
     for (field <- kafkaConfig.fields.distinct) {
-      columns.append(get_json_object(col("data"), "$." + field).alias(field))
+      columns.append(get_json_object(col("value"), "$." + field).alias(field))
     }
 
     var data = df
       .selectExpr("CAST(value AS STRING)")
       .as[String](Encoders.STRING)
-      .select(get_json_object(col("value"), "$.data").alias("data"))
+//      .select(get_json_object(col("value"), "$.data").alias("data"))
       .select(columns: _*)
       .na
       .drop(kafkaConfig.keyFields.distinct.size, kafkaConfig.keyFields.distinct)
@@ -71,7 +71,6 @@ class KafkaReader(override val session: SparkSession, kafkaConfig: KafkaSourceCo
         .withColumn(kafkaConfig.edgeDstIdFIelds.mkString("_"),
                     col = concat_ws(":", kafkaConfig.edgeDstIdFIelds.map(col): _*))
     }
-    data.writeStream.format("console").start()
     data
   }
 }

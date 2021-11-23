@@ -105,6 +105,9 @@ class EdgeProcessor(data: DataFrame,
     val partitionNum    = metaProvider.getPartNumber(space)
 
     if (edgeConfig.dataSinkConfigEntry.category == SinkCategory.SST) {
+      val streamingDataSourceConfig =
+        edgeConfig.dataSourceConfigEntry.asInstanceOf[StreamingDataSourceConfigEntry]
+
       val fileBaseConfig = edgeConfig.dataSinkConfigEntry.asInstanceOf[FileBaseSinkConfigEntry]
       val namenode       = fileBaseConfig.fsName.orNull
       val edgeName       = edgeConfig.name
@@ -281,7 +284,7 @@ class EdgeProcessor(data: DataFrame,
                 }
             }
           })
-          .trigger(Trigger.ProcessingTime("10 seconds"))
+          .trigger(Trigger.ProcessingTime(s"${streamingDataSourceConfig.intervalSeconds} seconds"))
           .start()
           .awaitTermination()
       } else {
