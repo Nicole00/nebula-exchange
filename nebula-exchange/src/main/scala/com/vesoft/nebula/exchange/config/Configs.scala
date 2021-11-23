@@ -659,8 +659,8 @@ object Configs {
             keyValueFields.append(config.getStringList("vertex.field").asScala: _*)
             vertexIdFields.append(config.getStringList("vertex.field").asScala: _*)
           } else {
-            valueFields.append(config.getString("vertex"))
-            keyValueFields.append(config.getString("vertex"))
+            valueFields.append(config.getStringList("vertex").asScala: _*)
+            keyValueFields.append(config.getStringList("vertex").asScala: _*)
             vertexIdFields.append(config.getStringList("vertex").asScala: _*)
           }
         } else {
