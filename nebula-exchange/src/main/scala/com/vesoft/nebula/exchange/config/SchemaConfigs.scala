@@ -55,13 +55,13 @@ case class TagConfigEntry(override val name: String,
                           override val dataSinkConfigEntry: DataSinkConfigEntry,
                           override val fields: List[String],
                           override val nebulaFields: List[String],
-                          vertexField: String,
+                          vertexField: List[String],
                           vertexPolicy: Option[KeyPolicy.Value],
                           override val batch: Int,
                           override val partition: Int,
                           override val checkPointPath: Option[String])
     extends SchemaConfigEntry {
-  require(name.trim.nonEmpty && vertexField.trim.nonEmpty && batch > 0)
+  require(name.trim.nonEmpty)
 
   override def toString: String = {
     s"Tag name: $name, " +
@@ -98,10 +98,10 @@ case class EdgeConfigEntry(override val name: String,
                            override val dataSinkConfigEntry: DataSinkConfigEntry,
                            override val fields: List[String],
                            override val nebulaFields: List[String],
-                           sourceField: String,
+                           sourceField: List[String],
                            sourcePolicy: Option[KeyPolicy.Value],
                            rankingField: Option[String],
-                           targetField: String,
+                           targetField: List[String],
                            targetPolicy: Option[KeyPolicy.Value],
                            isGeo: Boolean,
                            latitude: Option[String],
@@ -110,9 +110,7 @@ case class EdgeConfigEntry(override val name: String,
                            override val partition: Int,
                            override val checkPointPath: Option[String])
     extends SchemaConfigEntry {
-  require(
-    name.trim.nonEmpty && sourceField.trim.nonEmpty &&
-      targetField.trim.nonEmpty && batch > 0)
+  require(name.trim.nonEmpty)
 
   override def toString: String = {
     if (isGeo) {

@@ -168,7 +168,10 @@ case class KafkaSourceConfigEntry(override val category: SourceCategory.Value,
                                   server: String,
                                   topic: String,
                                   fields: List[String],
-                                  keyFields: List[String])
+                                  keyFields: List[String],
+                                  vertexIdFileds: List[String],
+                                  edgeSrcIdFields: List[String],
+                                  edgeDstIdFIelds: List[String])
     extends StreamingDataSourceConfigEntry {
   require(server.trim.nonEmpty && topic.trim.nonEmpty)
 

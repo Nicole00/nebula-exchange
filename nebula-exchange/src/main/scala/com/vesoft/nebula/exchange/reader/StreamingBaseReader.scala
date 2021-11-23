@@ -7,7 +7,8 @@ package com.vesoft.nebula.exchange.reader
 
 import com.vesoft.nebula.exchange.config.{KafkaSourceConfigEntry, PulsarSourceConfigEntry}
 import org.apache.spark.sql.catalyst.dsl.expressions.StringToAttributeConversionHelper
-import org.apache.spark.sql.functions.{col, get_json_object}
+import org.apache.spark.sql.functions.{col, concat_ws, get_json_object}
+import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{Column, DataFrame, Encoders, SparkSession}
 
 import scala.collection.mutable.ListBuffer
@@ -44,17 +45,34 @@ class KafkaReader(override val session: SparkSession, kafkaConfig: KafkaSourceCo
 
     val columns: ListBuffer[Column] = new ListBuffer[Column]
     for (field <- kafkaConfig.fields.distinct) {
-      columns.append(get_json_object(col("value"), "$." + field).alias(field))
+      columns.append(get_json_object(col("data"), "$." + field).alias(field))
     }
 
-    val dd = df
+    var data = df
       .selectExpr("CAST(value AS STRING)")
       .as[String](Encoders.STRING)
-//      .select(get_json_object(col("value"), "$.data").alias("data"))
+      .select(get_json_object(col("value"), "$.data").alias("data"))
       .select(columns: _*)
       .na
       .drop(kafkaConfig.keyFields.distinct.size, kafkaConfig.keyFields.distinct)
-    dd
+
+    val cols: List[Column] = data.schema.fields.toList.map(column => col(column.name))
+    if (kafkaConfig.vertexIdFileds.nonEmpty) {
+      data = data
+        .select(cols: _*)
+        .withColumn(kafkaConfig.vertexIdFileds.mkString("_"),
+                    col = concat_ws(":", kafkaConfig.vertexIdFileds.map(col): _*))
+
+    } else if (kafkaConfig.edgeSrcIdFields.nonEmpty) {
+      data = data
+        .select(cols: _*)
+        .withColumn(kafkaConfig.edgeSrcIdFields.mkString("_"),
+                    col = concat_ws(":", kafkaConfig.edgeSrcIdFields.map(col): _*))
+        .withColumn(kafkaConfig.edgeDstIdFIelds.mkString("_"),
+                    col = concat_ws(":", kafkaConfig.edgeDstIdFIelds.map(col): _*))
+    }
+    data.writeStream.format("console").start()
+    data
   }
 }
 

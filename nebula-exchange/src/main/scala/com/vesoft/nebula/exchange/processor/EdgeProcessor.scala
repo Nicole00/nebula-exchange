@@ -114,22 +114,23 @@ class EdgeProcessor(data: DataFrame,
       val edgeItem    = metaProvider.getEdgeItem(space, edgeName)
 
       val distintData = if (edgeConfig.rankingField.isDefined) {
-        data.dropDuplicates(edgeConfig.sourceField,
-                            edgeConfig.targetField,
+        data.dropDuplicates(edgeConfig.sourceField.mkString("_"),
+                            edgeConfig.targetField.mkString("_"),
                             edgeConfig.rankingField.get)
       } else {
-        data.dropDuplicates(edgeConfig.sourceField, edgeConfig.targetField)
+        data.dropDuplicates(edgeConfig.sourceField.mkString("_"),
+                            edgeConfig.targetField.mkString("_"))
       }
       val sstData = distintData
         .mapPartitions { iter =>
           iter.map { row =>
-            val srcIndex: Int = row.schema.fieldIndex(edgeConfig.sourceField)
+            val srcIndex: Int = row.schema.fieldIndex(edgeConfig.sourceField.mkString("_"))
             assert(srcIndex >= 0 && !row.isNullAt(srcIndex),
                    s"edge source vertex must exist and cannot be null, your row data is $row")
             var srcId: String = row.get(srcIndex).toString
             if (srcId.equals(DEFAULT_EMPTY_VALUE)) { srcId = "" }
 
-            val dstIndex: Int = row.schema.fieldIndex(edgeConfig.targetField)
+            val dstIndex: Int = row.schema.fieldIndex(edgeConfig.targetField.mkString("_"))
             assert(dstIndex >= 0 && !row.isNullAt(dstIndex),
                    s"edge target vertex must exist and cannot be null, your row data is $row")
             var dstId: String = row.get(dstIndex).toString
@@ -335,7 +336,7 @@ class EdgeProcessor(data: DataFrame,
       val edgeFrame = data
         .map { row =>
           var sourceField = if (!edgeConfig.isGeo) {
-            val sourceIndex = row.schema.fieldIndex(edgeConfig.sourceField)
+            val sourceIndex = row.schema.fieldIndex(edgeConfig.sourceField.mkString("_"))
             assert(sourceIndex >= 0 && !row.isNullAt(sourceIndex),
                    s"source vertexId must exist and cannot be null, your row data is $row")
             val value = row.get(sourceIndex).toString
@@ -359,7 +360,7 @@ class EdgeProcessor(data: DataFrame,
                    "only int vidType can use policy, but your vidType is FIXED_STRING.")
           }
 
-          val targetIndex = row.schema.fieldIndex(edgeConfig.targetField)
+          val targetIndex = row.schema.fieldIndex(edgeConfig.targetField.mkString("_"))
           assert(targetIndex >= 0 && !row.isNullAt(targetIndex),
                  s"target vertexId must exist and cannot be null, your row data is $row")
           var targetField = row.get(targetIndex).toString

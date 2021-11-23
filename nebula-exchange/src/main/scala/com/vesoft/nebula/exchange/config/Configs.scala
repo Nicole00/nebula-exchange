@@ -360,9 +360,9 @@ object Configs {
         // You can specified the vertex field name via the config item `vertex`
         // If you want to qualified the key policy, you can wrap them into a block.
         val vertexField = if (tagConfig.hasPath("vertex.field")) {
-          tagConfig.getString("vertex.field")
+          tagConfig.getStringList("vertex.field")
         } else {
-          tagConfig.getString("vertex")
+          tagConfig.getStringList("vertex")
         }
 
         val policyOpt = if (tagConfig.hasPath("vertex.policy")) {
@@ -396,7 +396,7 @@ object Configs {
                                    sinkConfig,
                                    fields,
                                    nebulaFields,
-                                   vertexField,
+                                   vertexField.asScala.toList,
                                    policyOpt,
                                    batch,
                                    partition,
@@ -439,9 +439,9 @@ object Configs {
 
         val sourceField = if (!isGeo) {
           if (edgeConfig.hasPath("source.field")) {
-            edgeConfig.getString("source.field")
+            edgeConfig.getStringList("source.field")
           } else {
-            edgeConfig.getString("source")
+            edgeConfig.getStringList("source")
           }
         } else {
           throw new IllegalArgumentException("Source must be specified")
@@ -458,10 +458,10 @@ object Configs {
           None
         }
 
-        val targetField: String = if (edgeConfig.hasPath("target.field")) {
-          edgeConfig.getString("target.field")
+        val targetField = if (edgeConfig.hasPath("target.field")) {
+          edgeConfig.getStringList("target.field")
         } else {
-          edgeConfig.getString("target")
+          edgeConfig.getStringList("target")
         }
 
         val targetPolicy = if (edgeConfig.hasPath("target.policy")) {
@@ -505,10 +505,10 @@ object Configs {
           sinkConfig,
           fields,
           nebulaFields,
-          sourceField,
+          sourceField.asScala.toList,
           sourcePolicy,
           ranking,
-          targetField,
+          targetField.asScala.toList,
           targetPolicy,
           isGeo,
           latitude,
@@ -647,43 +647,57 @@ object Configs {
         val intervalSeconds =
           if (config.hasPath("interval.seconds")) config.getInt("interval.seconds")
           else DEFAULT_STREAM_INTERVAL
-        val valueFields: ListBuffer[String]    = new ListBuffer[String]
-        val keyValueFields: ListBuffer[String] = new ListBuffer[String]
+        val valueFields: ListBuffer[String]     = new ListBuffer[String]
+        val keyValueFields: ListBuffer[String]  = new ListBuffer[String]
+        val vertexIdFields: ListBuffer[String]  = new ListBuffer[String]
+        val edgeSrcIdFields: ListBuffer[String] = new ListBuffer[String]
+        val edgeDstIdFields: ListBuffer[String] = new ListBuffer[String]
         valueFields.append(config.getStringList("fields").asScala: _*)
         if (config.hasPath("vertex")) {
           if (config.hasPath("vertex.field")) {
-            valueFields.append(config.getString("vertex.field"))
-            keyValueFields.append(config.getString("vertex.field"))
+            valueFields.append(config.getStringList("vertex.field").asScala: _*)
+            keyValueFields.append(config.getStringList("vertex.field").asScala: _*)
+            vertexIdFields.append(config.getStringList("vertex.field").asScala: _*)
           } else {
             valueFields.append(config.getString("vertex"))
             keyValueFields.append(config.getString("vertex"))
+            vertexIdFields.append(config.getStringList("vertex").asScala: _*)
           }
         } else {
           if (config.hasPath("source.field")) {
-            valueFields.append(config.getString("source.field"))
-            keyValueFields.append(config.getString("source.field"))
+            valueFields.append(config.getStringList("source.field").asScala: _*)
+            keyValueFields.append(config.getStringList("source.field").asScala: _*)
+            edgeSrcIdFields.append(config.getStringList("source.field").asScala: _*)
           } else {
-            valueFields.append(config.getString("source"))
-            keyValueFields.append(config.getString("source"))
+            valueFields.append(config.getStringList("source").asScala: _*)
+            keyValueFields.append(config.getStringList("source").asScala: _*)
+            edgeSrcIdFields.append(config.getStringList("source").asScala: _*)
           }
           if (config.hasPath("target.field")) {
-            valueFields.append(config.getString("target.field"))
-            keyValueFields.append(config.getString("target.field"))
+            valueFields.append(config.getStringList("target.field").asScala: _*)
+            keyValueFields.append(config.getStringList("target.field").asScala: _*)
+            edgeDstIdFields.append(config.getStringList("target.field").asScala: _*)
           } else {
-            valueFields.append(config.getString("target"))
-            keyValueFields.append(config.getString("target"))
+            valueFields.append(config.getStringList("target").asScala: _*)
+            keyValueFields.append(config.getStringList("target").asScala: _*)
+            edgeDstIdFields.append(config.getStringList("target").asScala: _*)
           }
           if (config.hasPath("ranking")) {
             valueFields.append(config.getString("ranking"))
             keyValueFields.append(config.getString("ranking"))
           }
         }
-        KafkaSourceConfigEntry(SourceCategory.KAFKA,
-                               intervalSeconds,
-                               config.getString("service"),
-                               config.getString("topic"),
-                               valueFields.toList,
-                               keyValueFields.toList)
+        KafkaSourceConfigEntry(
+          SourceCategory.KAFKA,
+          intervalSeconds,
+          config.getString("service"),
+          config.getString("topic"),
+          valueFields.toList,
+          keyValueFields.toList,
+          vertexIdFields.toList,
+          edgeSrcIdFields.toList,
+          edgeDstIdFields.toList
+        )
       case SourceCategory.PULSAR =>
         val options =
           config.getObject("options").unwrapped.asScala.map(x => x._1 -> x._2.toString).toMap
