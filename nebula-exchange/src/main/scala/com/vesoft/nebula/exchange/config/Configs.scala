@@ -692,6 +692,7 @@ object Configs {
           intervalSeconds,
           config.getString("service"),
           config.getString("topic"),
+          config.getString("groupId"),
           valueFields.toList,
           keyValueFields.toList,
           vertexIdFields.toList,
