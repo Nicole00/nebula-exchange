@@ -80,7 +80,7 @@ class NebulaUtilsSuite {
                                       dataSinkConfigEntry,
                                       sourceFields,
                                       nebulaFields,
-                                      List("id"),
+                                      "id",
                                       Some(KeyPolicy.UUID),
                                       1,
                                       1,

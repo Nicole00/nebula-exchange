@@ -360,9 +360,9 @@ object Configs {
         // You can specified the vertex field name via the config item `vertex`
         // If you want to qualified the key policy, you can wrap them into a block.
         val vertexField = if (tagConfig.hasPath("vertex.field")) {
-          tagConfig.getStringList("vertex.field")
+          tagConfig.getString("vertex.field")
         } else {
-          tagConfig.getStringList("vertex")
+          tagConfig.getString("vertex")
         }
 
         val policyOpt = if (tagConfig.hasPath("vertex.policy")) {
@@ -396,7 +396,7 @@ object Configs {
                                    sinkConfig,
                                    fields,
                                    nebulaFields,
-                                   vertexField.asScala.toList,
+                                   vertexField,
                                    policyOpt,
                                    batch,
                                    partition,
@@ -439,9 +439,9 @@ object Configs {
 
         val sourceField = if (!isGeo) {
           if (edgeConfig.hasPath("source.field")) {
-            edgeConfig.getStringList("source.field")
+            edgeConfig.getString("source.field")
           } else {
-            edgeConfig.getStringList("source")
+            edgeConfig.getString("source")
           }
         } else {
           throw new IllegalArgumentException("Source must be specified")
@@ -459,9 +459,9 @@ object Configs {
         }
 
         val targetField = if (edgeConfig.hasPath("target.field")) {
-          edgeConfig.getStringList("target.field")
+          edgeConfig.getString("target.field")
         } else {
-          edgeConfig.getStringList("target")
+          edgeConfig.getString("target")
         }
 
         val targetPolicy = if (edgeConfig.hasPath("target.policy")) {
@@ -505,10 +505,10 @@ object Configs {
           sinkConfig,
           fields,
           nebulaFields,
-          sourceField.asScala.toList,
+          sourceField,
           sourcePolicy,
           ranking,
-          targetField.asScala.toList,
+          targetField,
           targetPolicy,
           isGeo,
           latitude,

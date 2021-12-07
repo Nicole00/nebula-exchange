@@ -6,8 +6,20 @@
 package scala.com.vesoft.nebula.exchange.processor
 
 import com.vesoft.nebula.exchange.processor.Processor
-import com.vesoft.nebula.{Date, DateTime, NullType, Time, Value, Geography, Coordinate, Point, LineString, Polygon}
+import com.vesoft.nebula.{
+  Coordinate,
+  Date,
+  DateTime,
+  Geography,
+  LineString,
+  NullType,
+  Point,
+  Polygon,
+  Time,
+  Value
+}
 import com.vesoft.nebula.meta.PropertyType
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.types.{
   BooleanType,
@@ -141,7 +153,7 @@ class ProcessorSuite extends Processor {
     assert(extraValueForSST(row, "col14", map).equals(nullValue))
 
     // POINT(3 8)
-    val geogPoint = Geography.ptVal(new Point(new Coordinate(3, 8)))
+    val geogPoint       = Geography.ptVal(new Point(new Coordinate(3, 8)))
     val geogPointExpect = extraValueForSST(row, "col15", map)
 
     assert(geogPointExpect.equals(geogPoint))
@@ -166,6 +178,6 @@ class ProcessorSuite extends Processor {
   /**
     * process dataframe to vertices or edges
     */
-  override def process(): Unit = ???
+  override def process(data: DataFrame): Unit = ???
 
 }

@@ -128,7 +128,7 @@ class VerticesProcessor(tagConfig: TagConfigEntry,
         .dropDuplicates(tagConfig.vertexField)
         .mapPartitions { iter =>
           iter.map { row =>
-            val index: Int = row.schema.fieldIndex(tagConfig.vertexField.mkString("_"))
+            val index: Int = row.schema.fieldIndex(tagConfig.vertexField)
             assert(index >= 0 && !row.isNullAt(index),
                    s"vertexId must exist and cannot be null, your row data is $row")
             var vertexId: String = row.get(index).toString
@@ -235,7 +235,7 @@ class VerticesProcessor(tagConfig: TagConfigEntry,
       val vertices = data
         .map { row =>
           val vertexID = {
-            val index = row.schema.fieldIndex(tagConfig.vertexField.mkString("_"))
+            val index = row.schema.fieldIndex(tagConfig.vertexField)
             assert(index >= 0 && !row.isNullAt(index),
                    s"vertexId must exist and cannot be null, your row data is $row")
             var value = row.get(index).toString
