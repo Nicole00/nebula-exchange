@@ -161,23 +161,20 @@ case class MySQLSourceConfigEntry(override val category: SourceCategory.Value,
   * TODO: Support more config item about Kafka Consumer
   *
   * @param server
-  * @param topic
+  * @param topics
   */
 case class KafkaSourceConfigEntry(override val category: SourceCategory.Value,
                                   override val intervalSeconds: Int,
                                   server: String,
-                                  topic: String,
+                                  topics: List[String],
                                   groupId: String,
                                   fields: List[String],
-                                  keyFields: List[String],
-                                  vertexIdFileds: List[String],
-                                  edgeSrcIdFields: List[String],
-                                  edgeDstIdFIelds: List[String])
+                                  keyFields: List[String])
     extends StreamingDataSourceConfigEntry {
-  require(server.trim.nonEmpty && topic.trim.nonEmpty)
+  require(server.trim.nonEmpty && topics.nonEmpty)
 
   override def toString: String = {
-    s"Kafka source server: ${server} topic:${topic}"
+    s"Kafka source server: ${server} topics:${topics}"
   }
 }
 

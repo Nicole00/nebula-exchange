@@ -15,15 +15,12 @@ import org.apache.spark.util.LongAccumulator
 
 import scala.collection.mutable.ArrayBuffer
 
-class ReloadProcessor(data: DataFrame,
-                      config: Configs,
-                      batchSuccess: LongAccumulator,
-                      batchFailure: LongAccumulator)
+class ReloadProcessor(config: Configs, batchSuccess: LongAccumulator, batchFailure: LongAccumulator)
     extends Processor {
   @transient
   private[this] lazy val LOG = Logger.getLogger(this.getClass)
 
-  override def process(): Unit = {
+  override def process(data: DataFrame): Unit = {
     data.foreachPartition(processEachPartition(_))
   }
 

@@ -40,8 +40,7 @@ import org.apache.spark.util.LongAccumulator
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
-class EdgeProcessor(data: DataFrame,
-                    edgeConfig: EdgeConfigEntry,
+class EdgeProcessor(edgeConfig: EdgeConfigEntry,
                     fieldKeys: List[String],
                     nebulaKeys: List[String],
                     config: Configs,
@@ -92,7 +91,7 @@ class EdgeProcessor(data: DataFrame,
     graphProvider.close()
   }
 
-  override def process(): Unit = {
+  override def process(data: DataFrame): Unit = {
 
     val address = config.databaseConfig.getMetaAddress
     val space   = config.databaseConfig.space
@@ -233,104 +232,48 @@ class EdgeProcessor(data: DataFrame,
         .toDF("key", "value")
 //        .sortWithinPartitions("key")
 
-      if (data.isStreaming) {
-        sstData.writeStream
-          .foreachBatch((edges, id) => {
-            edges.sortWithinPartitions("key").foreachPartition {
-              iterator: Iterator[Row] =>
-                val taskID                  = TaskContext.get().taskAttemptId()
-                var writer: NebulaSSTWriter = null
-                var currentPart             = -1
-                try {
-                  iterator.foreach {
-                    vertex =>
-                      val key   = vertex.getAs[Array[Byte]](0)
-                      val value = vertex.getAs[Array[Byte]](1)
-                      var part = ByteBuffer
-                        .wrap(key, 0, 4)
-                        .order(ByteOrder.nativeOrder)
-                        .getInt >> 8
-                      if (part <= 0) {
-                        part = part + partitionNum
-                      }
+      sstData.sortWithinPartitions("key").foreachPartition { iterator: Iterator[Row] =>
+        val taskID                  = TaskContext.get().taskAttemptId()
+        var writer: NebulaSSTWriter = null
+        var currentPart             = -1
+        try {
+          iterator.foreach { vertex =>
+            val key   = vertex.getAs[Array[Byte]](0)
+            val value = vertex.getAs[Array[Byte]](1)
+            var part = ByteBuffer
+              .wrap(key, 0, 4)
+              .order(ByteOrder.nativeOrder)
+              .getInt >> 8
+            if (part <= 0) {
+              part = part + partitionNum
+            }
 
-                      if (part != currentPart) {
-                        if (writer != null) {
-                          writer.close()
-                          val localFile = s"${fileBaseConfig.localPath}/$currentPart-$taskID.sst"
-                          HDFSUtils.upload(
-                            localFile,
-                            s"${fileBaseConfig.remotePath}/${currentPart}/$currentPart-$taskID.sst",
-                            namenode)
-                          Files.delete(Paths.get(localFile))
-                        }
-                        currentPart = part
-                        val tmp = s"${fileBaseConfig.localPath}/$currentPart-$taskID.sst"
-                        writer = new NebulaSSTWriter(tmp)
-                        writer.prepare()
-                      }
-                      writer.write(key, value)
-                  }
-                } finally {
-                  if (writer != null) {
-                    writer.close()
-                    val localFile = s"${fileBaseConfig.localPath}/$currentPart-$taskID.sst"
-                    HDFSUtils.upload(
-                      localFile,
-                      s"${fileBaseConfig.remotePath}/${currentPart}/$currentPart-$taskID.sst",
-                      namenode)
-                    Files.delete(Paths.get(localFile))
-                  }
-                }
-            }
-          })
-          .trigger(Trigger.ProcessingTime(s"${streamingDataSourceConfig.intervalSeconds} seconds"))
-          .start()
-          .awaitTermination()
-      } else {
-        sstData.sortWithinPartitions("key").foreachPartition { iterator: Iterator[Row] =>
-          val taskID                  = TaskContext.get().taskAttemptId()
-          var writer: NebulaSSTWriter = null
-          var currentPart             = -1
-          try {
-            iterator.foreach { vertex =>
-              val key   = vertex.getAs[Array[Byte]](0)
-              val value = vertex.getAs[Array[Byte]](1)
-              var part = ByteBuffer
-                .wrap(key, 0, 4)
-                .order(ByteOrder.nativeOrder)
-                .getInt >> 8
-              if (part <= 0) {
-                part = part + partitionNum
+            if (part != currentPart) {
+              if (writer != null) {
+                writer.close()
+                val localFile = s"${fileBaseConfig.localPath}/$currentPart-$taskID.sst"
+                HDFSUtils.upload(
+                  localFile,
+                  s"${fileBaseConfig.remotePath}/${currentPart}/$currentPart-$taskID.sst",
+                  namenode)
+                Files.delete(Paths.get(localFile))
               }
-
-              if (part != currentPart) {
-                if (writer != null) {
-                  writer.close()
-                  val localFile = s"${fileBaseConfig.localPath}/$currentPart-$taskID.sst"
-                  HDFSUtils.upload(
-                    localFile,
-                    s"${fileBaseConfig.remotePath}/${currentPart}/$currentPart-$taskID.sst",
-                    namenode)
-                  Files.delete(Paths.get(localFile))
-                }
-                currentPart = part
-                val tmp = s"${fileBaseConfig.localPath}/$currentPart-$taskID.sst"
-                writer = new NebulaSSTWriter(tmp)
-                writer.prepare()
-              }
-              writer.write(key, value)
+              currentPart = part
+              val tmp = s"${fileBaseConfig.localPath}/$currentPart-$taskID.sst"
+              writer = new NebulaSSTWriter(tmp)
+              writer.prepare()
             }
-          } finally {
-            if (writer != null) {
-              writer.close()
-              val localFile = s"${fileBaseConfig.localPath}/$currentPart-$taskID.sst"
-              HDFSUtils.upload(
-                localFile,
-                s"${fileBaseConfig.remotePath}/${currentPart}/$currentPart-$taskID.sst",
-                namenode)
-              Files.delete(Paths.get(localFile))
-            }
+            writer.write(key, value)
+          }
+        } finally {
+          if (writer != null) {
+            writer.close()
+            val localFile = s"${fileBaseConfig.localPath}/$currentPart-$taskID.sst"
+            HDFSUtils.upload(
+              localFile,
+              s"${fileBaseConfig.remotePath}/${currentPart}/$currentPart-$taskID.sst",
+              namenode)
+            Files.delete(Paths.get(localFile))
           }
         }
       }
@@ -396,20 +339,7 @@ class EdgeProcessor(data: DataFrame,
           }
         }(Encoders.kryo[Edge])
 
-      // streaming write
-      if (data.isStreaming) {
-        val streamingDataSourceConfig =
-          edgeConfig.dataSourceConfigEntry.asInstanceOf[StreamingDataSourceConfigEntry]
-        edgeFrame.writeStream
-          .foreachBatch((edges, batchId) => {
-            LOG.info(s"${edgeConfig.name} edge start batch ${batchId}.")
-            edges.foreachPartition(processEachPartition _)
-          })
-          .trigger(Trigger.ProcessingTime(s"${streamingDataSourceConfig.intervalSeconds} seconds"))
-          .start()
-          .awaitTermination()
-      } else
-        edgeFrame.foreachPartition(processEachPartition _)
+      edgeFrame.foreachPartition(processEachPartition _)
     }
   }
 

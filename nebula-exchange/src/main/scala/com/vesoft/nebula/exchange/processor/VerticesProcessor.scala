@@ -49,8 +49,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
   * @param batchSuccess
   * @param batchFailure
   */
-class VerticesProcessor(data: DataFrame,
-                        tagConfig: TagConfigEntry,
+class VerticesProcessor(tagConfig: TagConfigEntry,
                         fieldKeys: List[String],
                         nebulaKeys: List[String],
                         config: Configs,
@@ -102,7 +101,7 @@ class VerticesProcessor(data: DataFrame,
 
   private def processStreamingVertexEachPartition(): Unit = {}
 
-  override def process(): Unit = {
+  override def process(data: DataFrame): Unit = {
 
     val address = config.databaseConfig.getMetaAddress
     val space   = config.databaseConfig.space
@@ -182,114 +181,52 @@ class VerticesProcessor(data: DataFrame,
         }(Encoders.tuple(Encoders.BINARY, Encoders.BINARY))
         .toDF("key", "value")
 
-      LOG.info("start to process stream write sst")
-      if (data.isStreaming) {
-        distinctData.writeStream
-          .foreachBatch((vertices, id) => {
-            vertices.sortWithinPartitions("key").foreachPartition {
-              iterator: Iterator[Row] =>
-                val taskID                  = TaskContext.get().taskAttemptId()
-                var writer: NebulaSSTWriter = null
-                var currentPart             = -1
-                val localPath               = fileBaseConfig.localPath
-                val remotePath              = fileBaseConfig.remotePath
-                try {
-                  iterator.foreach {
-                    vertex =>
-                      val key   = vertex.getAs[Array[Byte]](0)
-                      val value = vertex.getAs[Array[Byte]](1)
-                      var part = ByteBuffer
-                        .wrap(key, 0, 4)
-                        .order(ByteOrder.nativeOrder)
-                        .getInt >> 8
-                      if (part <= 0) {
-                        part = part + partitionNum
-                      }
+      distinctData.sortWithinPartitions("key").foreachPartition { iterator: Iterator[Row] =>
+        val taskID                  = TaskContext.get().taskAttemptId()
+        var writer: NebulaSSTWriter = null
+        var currentPart             = -1
+        val localPath               = fileBaseConfig.localPath
+        val remotePath              = fileBaseConfig.remotePath
+        try {
+          iterator.foreach { vertex =>
+            val key   = vertex.getAs[Array[Byte]](0)
+            val value = vertex.getAs[Array[Byte]](1)
+            var part = ByteBuffer
+              .wrap(key, 0, 4)
+              .order(ByteOrder.nativeOrder)
+              .getInt >> 8
+            if (part <= 0) {
+              part = part + partitionNum
+            }
 
-                      if (part != currentPart) {
-                        if (writer != null) {
-                          writer.close()
-                          val localFile = s"$localPath/$currentPart-$taskID.sst"
-                          HDFSUtils.upload(localFile,
-                                           s"$remotePath/${currentPart}/$currentPart-$taskID.sst",
-                                           namenode)
-                          Files.delete(Paths.get(localFile))
-                        }
-                        currentPart = part
-                        val tmp = s"$localPath/$currentPart-$taskID.sst"
-                        writer = new NebulaSSTWriter(tmp)
-                        writer.prepare()
-                      }
-                      writer.write(key, value)
-                  }
-                } catch {
-                  case e: Throwable => {
-                    LOG.error(e)
-                    batchFailure.add(1)
-                  }
-                } finally {
-                  if (writer != null) {
-                    writer.close()
-                    val localFile = s"$localPath/$currentPart-$taskID.sst"
-                    HDFSUtils.upload(localFile,
-                                     s"$remotePath/${currentPart}/$currentPart-$taskID.sst",
-                                     namenode)
-                    Files.delete(Paths.get(localFile))
-                  }
-                }
-            }
-          })
-          .trigger(Trigger.ProcessingTime(s"${streamingDataSourceConfig.intervalSeconds} seconds"))
-          .start()
-          .awaitTermination()
-      } else {
-        distinctData.sortWithinPartitions("key").foreachPartition { iterator: Iterator[Row] =>
-          val taskID                  = TaskContext.get().taskAttemptId()
-          var writer: NebulaSSTWriter = null
-          var currentPart             = -1
-          val localPath               = fileBaseConfig.localPath
-          val remotePath              = fileBaseConfig.remotePath
-          try {
-            iterator.foreach { vertex =>
-              val key   = vertex.getAs[Array[Byte]](0)
-              val value = vertex.getAs[Array[Byte]](1)
-              var part = ByteBuffer
-                .wrap(key, 0, 4)
-                .order(ByteOrder.nativeOrder)
-                .getInt >> 8
-              if (part <= 0) {
-                part = part + partitionNum
+            if (part != currentPart) {
+              if (writer != null) {
+                writer.close()
+                val localFile = s"$localPath/$currentPart-$taskID.sst"
+                HDFSUtils.upload(localFile,
+                                 s"$remotePath/${currentPart}/$currentPart-$taskID.sst",
+                                 namenode)
+                Files.delete(Paths.get(localFile))
               }
-
-              if (part != currentPart) {
-                if (writer != null) {
-                  writer.close()
-                  val localFile = s"$localPath/$currentPart-$taskID.sst"
-                  HDFSUtils.upload(localFile,
-                                   s"$remotePath/${currentPart}/$currentPart-$taskID.sst",
-                                   namenode)
-                  Files.delete(Paths.get(localFile))
-                }
-                currentPart = part
-                val tmp = s"$localPath/$currentPart-$taskID.sst"
-                writer = new NebulaSSTWriter(tmp)
-                writer.prepare()
-              }
-              writer.write(key, value)
+              currentPart = part
+              val tmp = s"$localPath/$currentPart-$taskID.sst"
+              writer = new NebulaSSTWriter(tmp)
+              writer.prepare()
             }
-          } catch {
-            case e: Throwable => {
-              LOG.error(e)
-              batchFailure.add(1)
-            }
-          } finally {
-            if (writer != null) {
-              writer.close()
-              val localFile = s"$localPath/$currentPart-$taskID.sst"
-              HDFSUtils
-                .upload(localFile, s"$remotePath/${currentPart}/$currentPart-$taskID.sst", namenode)
-              Files.delete(Paths.get(localFile))
-            }
+            writer.write(key, value)
+          }
+        } catch {
+          case e: Throwable => {
+            LOG.error(e)
+            batchFailure.add(1)
+          }
+        } finally {
+          if (writer != null) {
+            writer.close()
+            val localFile = s"$localPath/$currentPart-$taskID.sst"
+            HDFSUtils
+              .upload(localFile, s"$remotePath/${currentPart}/$currentPart-$taskID.sst", namenode)
+            Files.delete(Paths.get(localFile))
           }
         }
       }
@@ -326,20 +263,7 @@ class VerticesProcessor(data: DataFrame,
           Vertex(vertexID, values)
         }(Encoders.kryo[Vertex])
 
-      // streaming write
-      if (data.isStreaming) {
-        val streamingDataSourceConfig =
-          tagConfig.dataSourceConfigEntry.asInstanceOf[StreamingDataSourceConfigEntry]
-        vertices.writeStream
-          .foreachBatch((vertexSet, batchId) => {
-            LOG.info(s"${tagConfig.name} tag start batch ${batchId}.")
-            vertexSet.foreachPartition(processEachPartition _)
-          })
-          .trigger(Trigger.ProcessingTime(s"${streamingDataSourceConfig.intervalSeconds} seconds"))
-          .start()
-          .awaitTermination()
-      } else
-        vertices.foreachPartition(processEachPartition _)
+      vertices.foreachPartition(processEachPartition _)
     }
   }
 }

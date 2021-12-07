@@ -647,40 +647,31 @@ object Configs {
         val intervalSeconds =
           if (config.hasPath("interval.seconds")) config.getInt("interval.seconds")
           else DEFAULT_STREAM_INTERVAL
-        val valueFields: ListBuffer[String]     = new ListBuffer[String]
-        val keyValueFields: ListBuffer[String]  = new ListBuffer[String]
-        val vertexIdFields: ListBuffer[String]  = new ListBuffer[String]
-        val edgeSrcIdFields: ListBuffer[String] = new ListBuffer[String]
-        val edgeDstIdFields: ListBuffer[String] = new ListBuffer[String]
+        val valueFields: ListBuffer[String]    = new ListBuffer[String]
+        val keyValueFields: ListBuffer[String] = new ListBuffer[String]
         valueFields.append(config.getStringList("fields").asScala: _*)
         if (config.hasPath("vertex")) {
           if (config.hasPath("vertex.field")) {
-            valueFields.append(config.getStringList("vertex.field").asScala: _*)
-            keyValueFields.append(config.getStringList("vertex.field").asScala: _*)
-            vertexIdFields.append(config.getStringList("vertex.field").asScala: _*)
+            valueFields.append(config.getString("vertex.field"))
+            keyValueFields.append(config.getString("vertex.field"))
           } else {
-            valueFields.append(config.getStringList("vertex").asScala: _*)
-            keyValueFields.append(config.getStringList("vertex").asScala: _*)
-            vertexIdFields.append(config.getStringList("vertex").asScala: _*)
+            valueFields.append(config.getString("vertex"))
+            keyValueFields.append(config.getString("vertex"))
           }
         } else {
           if (config.hasPath("source.field")) {
-            valueFields.append(config.getStringList("source.field").asScala: _*)
-            keyValueFields.append(config.getStringList("source.field").asScala: _*)
-            edgeSrcIdFields.append(config.getStringList("source.field").asScala: _*)
+            valueFields.append(config.getString("source.field"))
+            keyValueFields.append(config.getString("source.field"))
           } else {
-            valueFields.append(config.getStringList("source").asScala: _*)
-            keyValueFields.append(config.getStringList("source").asScala: _*)
-            edgeSrcIdFields.append(config.getStringList("source").asScala: _*)
+            valueFields.append(config.getString("source"))
+            keyValueFields.append(config.getString("source"))
           }
           if (config.hasPath("target.field")) {
-            valueFields.append(config.getStringList("target.field").asScala: _*)
-            keyValueFields.append(config.getStringList("target.field").asScala: _*)
-            edgeDstIdFields.append(config.getStringList("target.field").asScala: _*)
+            valueFields.append(config.getString("target.field"))
+            keyValueFields.append(config.getString("target.field"))
           } else {
-            valueFields.append(config.getStringList("target").asScala: _*)
-            keyValueFields.append(config.getStringList("target").asScala: _*)
-            edgeDstIdFields.append(config.getStringList("target").asScala: _*)
+            valueFields.append(config.getString("target"))
+            keyValueFields.append(config.getString("target"))
           }
           if (config.hasPath("ranking")) {
             valueFields.append(config.getString("ranking"))
@@ -691,13 +682,10 @@ object Configs {
           SourceCategory.KAFKA,
           intervalSeconds,
           config.getString("service"),
-          config.getString("topic"),
+          config.getStringList("topics").asScala.toList,
           config.getString("groupId"),
           valueFields.toList,
-          keyValueFields.toList,
-          vertexIdFields.toList,
-          edgeSrcIdFields.toList,
-          edgeDstIdFields.toList
+          keyValueFields.toList
         )
       case SourceCategory.PULSAR =>
         val options =
