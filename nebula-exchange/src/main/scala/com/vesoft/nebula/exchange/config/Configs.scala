@@ -684,6 +684,7 @@ object Configs {
           config.getString("service"),
           config.getStringList("topics").asScala.toList,
           config.getString("groupId"),
+          config.getString("offset"),
           valueFields.toList,
           keyValueFields.toList
         )

@@ -168,6 +168,7 @@ case class KafkaSourceConfigEntry(override val category: SourceCategory.Value,
                                   server: String,
                                   topics: List[String],
                                   groupId: String,
+                                  offset: String,
                                   fields: List[String],
                                   keyFields: List[String])
     extends StreamingDataSourceConfigEntry {

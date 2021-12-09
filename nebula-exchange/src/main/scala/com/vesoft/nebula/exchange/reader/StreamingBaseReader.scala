@@ -107,7 +107,7 @@ class KafkaReader1(override val session: SparkSession, kafkaConfig: KafkaSourceC
       "key.deserializer"   -> classOf[StringDeserializer],
       "value.deserializer" -> classOf[StringDeserializer],
       "group.id"           -> kafkaConfig.groupId,
-      "auto.offset.reset"  -> "earliest",
+      "auto.offset.reset"  -> kafkaConfig.offset,
       "enable.auto.commit" -> (false: java.lang.Boolean)
     )
     val ssc = new StreamingContext(session.sparkContext, Seconds(kafkaConfig.intervalSeconds))
