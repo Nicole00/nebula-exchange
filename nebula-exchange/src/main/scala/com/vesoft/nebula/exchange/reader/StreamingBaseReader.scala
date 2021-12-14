@@ -108,8 +108,11 @@ class KafkaReader1(override val session: SparkSession, kafkaConfig: KafkaSourceC
       "value.deserializer" -> classOf[StringDeserializer],
       "group.id"           -> kafkaConfig.groupId,
       "auto.offset.reset"  -> kafkaConfig.offset,
-      "enable.auto.commit" -> (false: java.lang.Boolean)
+      "enable.auto.commit" -> (false: java.lang.Boolean),
+      "security.protocol"  -> "SASL_PLAINTEXT",
+      "sasl.mechanism"     -> "PLAIN"
     )
+    System.setProperty("java.security.auth.login.config", kafkaConfig.configFile)
     val ssc = new StreamingContext(session.sparkContext, Seconds(kafkaConfig.intervalSeconds))
 
     var topics = new ListBuffer[String]

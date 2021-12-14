@@ -686,7 +686,8 @@ object Configs {
           config.getString("groupId"),
           config.getString("offset"),
           valueFields.toList,
-          keyValueFields.toList
+          keyValueFields.toList,
+          config.getString("configFile")
         )
       case SourceCategory.PULSAR =>
         val options =
