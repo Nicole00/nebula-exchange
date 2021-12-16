@@ -152,7 +152,8 @@ class KafkaReader1(override val session: SparkSession, kafkaConfig: KafkaSourceC
                                             config,
                                             batchSuccess,
                                             batchFailure)
-        process.process(data)
+
+        process.process(data.repartition(tagConfigEntry.partition).toDF)
       }
 
       // edge import
@@ -163,7 +164,7 @@ class KafkaReader1(override val session: SparkSession, kafkaConfig: KafkaSourceC
                                         config,
                                         batchSuccess,
                                         batchFailure)
-        process.process(data)
+        process.process(data.repartition(edgeConfigEntry.partition).toDF)
       }
     })
     ssc.start()
