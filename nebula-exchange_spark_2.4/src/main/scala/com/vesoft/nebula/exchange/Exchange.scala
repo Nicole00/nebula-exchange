@@ -10,8 +10,39 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import java.io.File
 import com.vesoft.exchange.Argument
 import com.vesoft.exchange.common.{CheckPointHandler, ErrorHandler}
-import com.vesoft.exchange.common.config.{ClickHouseConfigEntry, Configs, DataSourceConfigEntry, FileBaseSourceConfigEntry, HBaseSourceConfigEntry, HiveSourceConfigEntry, JanusGraphSourceConfigEntry, KafkaSourceConfigEntry, MaxComputeConfigEntry, MySQLSourceConfigEntry, Neo4JSourceConfigEntry, PostgreSQLSourceConfigEntry, PulsarSourceConfigEntry, SinkCategory, SourceCategory}
-import com.vesoft.nebula.exchange.reader.{CSVReader, ClickhouseReader, HBaseReader, HiveReader, JSONReader, JanusGraphReader, KafkaReader, MaxcomputeReader, MySQLReader, Neo4JReader, ORCReader, ParquetReader, PostgreSQLReader, PulsarReader}
+import com.vesoft.exchange.common.config.{
+  ClickHouseConfigEntry,
+  Configs,
+  DataSourceConfigEntry,
+  FileBaseSourceConfigEntry,
+  HBaseSourceConfigEntry,
+  HiveSourceConfigEntry,
+  JanusGraphSourceConfigEntry,
+  KafkaSourceConfigEntry,
+  MaxComputeConfigEntry,
+  MySQLSourceConfigEntry,
+  Neo4JSourceConfigEntry,
+  PostgreSQLSourceConfigEntry,
+  PulsarSourceConfigEntry,
+  SinkCategory,
+  SourceCategory
+}
+import com.vesoft.nebula.exchange.reader.{
+  CSVReader,
+  ClickhouseReader,
+  HBaseReader,
+  HiveReader,
+  JSONReader,
+  JanusGraphReader,
+  KafkaReader,
+  MaxcomputeReader,
+  MySQLReader,
+  Neo4JReader,
+  ORCReader,
+  ParquetReader,
+  PostgreSQLReader,
+  PulsarReader
+}
 import com.vesoft.exchange.common.processor.ReloadProcessor
 import com.vesoft.nebula.exchange.processor.{EdgeProcessor, VerticesProcessor}
 import org.apache.log4j.Logger
@@ -41,6 +72,7 @@ object Exchange {
     val session = SparkSession
       .builder()
       .appName(PROGRAM_NAME)
+      .master("local")
       .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
     for (key <- configs.sparkConfigEntry.map.keySet) {
