@@ -10,8 +10,39 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import java.io.File
 import com.vesoft.exchange.Argument
 import com.vesoft.exchange.common.{CheckPointHandler, ErrorHandler}
-import com.vesoft.exchange.common.config.{ClickHouseConfigEntry, Configs, DataSourceConfigEntry, FileBaseSourceConfigEntry, HBaseSourceConfigEntry, HiveSourceConfigEntry, JanusGraphSourceConfigEntry, KafkaSourceConfigEntry, MaxComputeConfigEntry, MySQLSourceConfigEntry, Neo4JSourceConfigEntry, PostgreSQLSourceConfigEntry, PulsarSourceConfigEntry, SinkCategory, SourceCategory}
-import com.vesoft.nebula.exchange.reader.{CSVReader, ClickhouseReader, HBaseReader, HiveReader, JSONReader, JanusGraphReader, KafkaReader, MaxcomputeReader, MySQLReader, Neo4JReader, ORCReader, ParquetReader, PostgreSQLReader, PulsarReader}
+import com.vesoft.exchange.common.config.{
+  ClickHouseConfigEntry,
+  Configs,
+  DataSourceConfigEntry,
+  FileBaseSourceConfigEntry,
+  HBaseSourceConfigEntry,
+  HiveSourceConfigEntry,
+  JanusGraphSourceConfigEntry,
+  KafkaSourceConfigEntry,
+  MaxComputeConfigEntry,
+  MySQLSourceConfigEntry,
+  Neo4JSourceConfigEntry,
+  PostgreSQLSourceConfigEntry,
+  PulsarSourceConfigEntry,
+  SinkCategory,
+  SourceCategory
+}
+import com.vesoft.nebula.exchange.reader.{
+  CSVReader,
+  ClickhouseReader,
+  HBaseReader,
+  HiveReader,
+  JSONReader,
+  JanusGraphReader,
+  KafkaReader,
+  MaxcomputeReader,
+  MySQLReader,
+  Neo4JReader,
+  ORCReader,
+  ParquetReader,
+  PostgreSQLReader,
+  PulsarReader
+}
 import com.vesoft.exchange.common.processor.ReloadProcessor
 import com.vesoft.nebula.exchange.processor.{EdgeProcessor, VerticesProcessor}
 import org.apache.log4j.Logger
@@ -48,7 +79,12 @@ object Exchange {
     }
 
     val sparkConf = new SparkConf()
-    sparkConf.registerKryoClasses(Array(classOf[com.facebook.thrift.async.TAsyncClientManager]))
+    sparkConf
+      .registerKryoClasses(Array(classOf[com.facebook.thrift.async.TAsyncClientManager]))
+      .set("spark.driver.allowMultipleContexts", "true")
+      .set("spark.neo4j.bolt.url", configs.databaseConfig.boltUrl)
+      .set("spark.neo4j.bolt.user", configs.databaseConfig.boltUser)
+      .set("spark.neo4j.bolt.password", configs.databaseConfig.boltPasswd)
 
     // com.vesoft.exchange.common.config hive for sparkSession
     if (c.hive) {

@@ -39,7 +39,10 @@ object SslType extends Enumeration {
   */
 case class DataBaseConfigEntry(graphAddress: List[String],
                                space: String,
-                               metaAddresses: List[String]) {
+                               metaAddresses: List[String],
+                               boltUrl: String,
+                               boltUser: String,
+                               boltPasswd: String) {
   require(graphAddress.nonEmpty, "nebula.address.graph cannot be empty")
   require(metaAddresses.nonEmpty, "nebula.address.meta cannot be empty")
   require(space.trim.nonEmpty, "nebula.space cannot be empty")
@@ -264,9 +267,13 @@ object Configs {
     val nebulaConfig  = config.getConfig("nebula")
     val addresses     = nebulaConfig.getStringList("address.graph").asScala.toList
     val metaAddresses = nebulaConfig.getStringList("address.meta").asScala.toList
+    val boltUrl       = nebulaConfig.getString("bolt.url")
+    val boltUser      = nebulaConfig.getString("bolt.user")
+    val boltPasswd    = nebulaConfig.getString("bolt.password")
 
-    val space         = nebulaConfig.getString("space")
-    val databaseEntry = DataBaseConfigEntry(addresses, space, metaAddresses)
+    val space = nebulaConfig.getString("space")
+    val databaseEntry =
+      DataBaseConfigEntry(addresses, space, metaAddresses, boltUrl, boltUser, boltPasswd)
     LOG.info(s"DataBase Config ${databaseEntry}")
 
     val user      = nebulaConfig.getString("user")
