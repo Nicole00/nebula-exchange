@@ -5,7 +5,7 @@
     <parent>
         <artifactId>nebula-spark</artifactId>
         <groupId>com.vesoft</groupId>
-        <version>2.5-SNAPSHOT</version>
+        <version>3.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -18,9 +18,9 @@
         <scala.2.10.version>2.10.7</scala.2.10.version>
         <scala.2.11.version>2.11.12</scala.2.11.version>
         <scala.2.12.version>2.12.10</scala.2.12.version>
-        <scala.version>${scala.2.11.version}</scala.version>
+        <scala.version>${scala.2.12.version}</scala.version>
         <version.scala.binary>2.12</version.scala.binary>
-        <spark.version>2.4.4</spark.version>
+        <spark.version>3.0.0</spark.version>
         <spark-csv.version>1.5.0</spark-csv.version>
         <scalatest.version>3.2.0</scalatest.version>
         <rocksdb.version>6.7.3</rocksdb.version>
@@ -28,7 +28,7 @@
         <scala-logging.version>3.9.2</scala-logging.version>
         <scala-xml.version>2.11.0-M4</scala-xml.version>
         <scopt.version>3.7.1</scopt.version>
-        <nebula.version>2.6.0</nebula.version>
+        <nebula.version>3.0.0</nebula.version>
         <s2.version>1.0.0</s2.version>
         <neo.version>2.4.5-M1</neo.version>
         <gremlin.version>3.4.6</gremlin.version>
@@ -255,28 +255,28 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.streamnative.connectors</groupId>
-            <artifactId>pulsar-spark-connector_2.11</artifactId>
-            <version>${pulsar.version}</version>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql-kafka-0-10_2.12</artifactId>
+            <version>3.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql-kafka-0-10_2.11</artifactId>
-            <version>2.4.7</version>
+            <artifactId>spark-streaming_2.12</artifactId>
+            <version>3.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-streaming_2.11</artifactId>
-            <version>2.4.7</version>
+            <artifactId>spark-streaming-kafka-0-10_2.12</artifactId>
+            <version>3.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-streaming-kafka-0-10_2.11</artifactId>
-            <version>2.4.7</version>
+            <artifactId>spark-token-provider-kafka-0-10_2.12</artifactId>
+            <version>3.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.11</artifactId>
+            <artifactId>spark-core_2.12</artifactId>
             <version>${spark.version}</version>
             <exclusions>
                 <exclusion>
@@ -375,7 +375,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.11</artifactId>
+            <artifactId>spark-sql_2.12</artifactId>
             <version>${spark.version}</version>
             <exclusions>
                 <exclusion>
@@ -414,12 +414,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-catalyst_2.11</artifactId>
+            <artifactId>spark-catalyst_2.12</artifactId>
             <version>${spark.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-hive_2.11</artifactId>
+            <artifactId>spark-hive_2.12</artifactId>
             <version>${spark.version}</version>
             <exclusions>
                 <exclusion>
@@ -474,7 +474,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-yarn_2.11</artifactId>
+            <artifactId>spark-yarn_2.12</artifactId>
             <version>${spark.version}</version>
             <exclusions>
                 <exclusion>
@@ -504,23 +504,8 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.databricks</groupId>
-            <artifactId>spark-csv_2.11</artifactId>
-            <version>${spark-csv.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>scala-library</artifactId>
-                    <groupId>org.scala-lang</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>univocity-parsers</artifactId>
-                    <groupId>com.univocity</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11</artifactId>
+            <artifactId>scalatest_2.12</artifactId>
             <version>${scalatest.version}</version>
             <scope>test</scope>
         </dependency>
@@ -536,7 +521,7 @@
         </dependency>
         <dependency>
             <groupId>com.typesafe.scala-logging</groupId>
-            <artifactId>scala-logging_2.11</artifactId>
+            <artifactId>scala-logging_2.12</artifactId>
             <version>${scala-logging.version}</version>
             <exclusions>
                 <exclusion>
@@ -555,7 +540,7 @@
         </dependency>
         <dependency>
             <groupId>com.github.scopt</groupId>
-            <artifactId>scopt_2.11</artifactId>
+            <artifactId>scopt_2.12</artifactId>
             <version>${scopt.version}</version>
         </dependency>
         <dependency>
@@ -575,134 +560,6 @@
                 <exclusion>
                     <artifactId>commons-codec</artifactId>
                     <groupId>commons-codec</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>neo4j-contrib</groupId>
-            <artifactId>neo4j-spark-connector</artifactId>
-            <version>${neo.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>scala-library</artifactId>
-                    <groupId>org.scala-lang</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>xbean-asm6-shaded</artifactId>
-                    <groupId>org.apache.xbean</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
-            <artifactId>spark-gremlin</artifactId>
-            <version>${gremlin.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>guava</artifactId>
-                    <groupId>com.google.guava</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>commons-lang3</artifactId>
-                    <groupId>org.apache.commons</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jcl-over-slf4j</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>commons-codec</artifactId>
-                    <groupId>commons-codec</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>spark-core_2.11</artifactId>
-                    <groupId>org.apache.spark</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>scala-xml_2.11</artifactId>
-                    <groupId>org.scala-lang.modules</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>scala-library</artifactId>
-                    <groupId>org.scala-lang</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-databind</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>hadoop-client</artifactId>
-                    <groupId>org.apache.hadoop</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>netty-all</artifactId>
-                    <groupId>io.netty</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.janusgraph</groupId>
-            <artifactId>janusgraph-core</artifactId>
-            <version>${janusgraph.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>commons-codec</artifactId>
-                    <groupId>commons-codec</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>commons-logging</artifactId>
-                    <groupId>commons-logging</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jsr305</artifactId>
-                    <groupId>com.google.code.findbugs</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>metrics-core</artifactId>
-                    <groupId>io.dropwizard.metrics</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>metrics-graphite</artifactId>
-                    <groupId>io.dropwizard.metrics</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>commons-lang3</artifactId>
-                    <groupId>org.apache.commons</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.janusgraph</groupId>
-            <artifactId>janusgraph-driver</artifactId>
-            <version>${janusgraph.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>guava</artifactId>
-                    <groupId>com.google.guava</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>commons-lang3</artifactId>
-                    <groupId>org.apache.commons</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>netty-all</artifactId>
-                    <groupId>io.netty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>ivy</artifactId>
-                    <groupId>org.apache.ivy</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -736,16 +593,7 @@
             <artifactId>scala-xml</artifactId>
             <version>${scala-xml.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.aliyun.odps</groupId>
-            <artifactId>odps-spark-datasource_2.11</artifactId>
-            <version>3.3.8-public</version>
-        </dependency>
-        <dependency>
-            <groupId>com.aliyun.emr</groupId>
-            <artifactId>emr-maxcompute_2.11</artifactId>
-            <version>2.2.0</version>
-        </dependency>
+
         <dependency>
             <groupId>ru.yandex.clickhouse</groupId>
             <artifactId>clickhouse-jdbc</artifactId>

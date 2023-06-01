@@ -14,12 +14,12 @@ import com.vesoft.nebula.{
   NullType,
   Point,
   Polygon,
+  PropertyType,
   Time,
   Value
 }
 import com.vesoft.nebula.exchange.utils.NebulaUtils.DEFAULT_EMPTY_VALUE
 import com.vesoft.nebula.exchange.utils.{HDFSUtils, NebulaUtils}
-import com.vesoft.nebula.meta.PropertyType
 import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types.{IntegerType, LongType, StringType}
 

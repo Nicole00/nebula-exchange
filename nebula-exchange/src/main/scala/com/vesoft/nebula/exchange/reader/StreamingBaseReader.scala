@@ -110,7 +110,7 @@ class KafkaReader1(override val session: SparkSession, kafkaConfig: KafkaSourceC
       "auto.offset.reset"  -> kafkaConfig.offset,
       "enable.auto.commit" -> (false: java.lang.Boolean),
       "security.protocol"  -> "SASL_PLAINTEXT",
-      "sasl.mechanism"     -> "PLAIN"
+      "sasl.mechanism"     -> "SCRAM-SHA-512"
     )
     System.setProperty("java.security.auth.login.config", kafkaConfig.configFile)
     val ssc = new StreamingContext(session.sparkContext, Seconds(kafkaConfig.intervalSeconds))

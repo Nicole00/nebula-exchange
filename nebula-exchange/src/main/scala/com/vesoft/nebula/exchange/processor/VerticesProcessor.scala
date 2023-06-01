@@ -41,7 +41,6 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
   *
-  * @param data
   * @param tagConfig
   * @param fieldKeys
   * @param nebulaKeys

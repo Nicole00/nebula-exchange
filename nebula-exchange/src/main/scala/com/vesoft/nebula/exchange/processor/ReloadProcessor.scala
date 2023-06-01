@@ -21,7 +21,7 @@ class ReloadProcessor(config: Configs, batchSuccess: LongAccumulator, batchFailu
   private[this] lazy val LOG = Logger.getLogger(this.getClass)
 
   override def process(data: DataFrame): Unit = {
-    data.foreachPartition(processEachPartition(_))
+    data.foreachPartition((rows: Iterator[Row]) => processEachPartition(rows))
   }
 
   private def processEachPartition(iterator: Iterator[Row]): Unit = {

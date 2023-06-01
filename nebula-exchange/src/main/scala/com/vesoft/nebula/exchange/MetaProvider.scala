@@ -6,10 +6,11 @@
 package com.vesoft.nebula.exchange
 
 import com.google.common.net.HostAndPort
+import com.vesoft.nebula.PropertyType
 import com.vesoft.nebula.client.graph.data.HostAddress
 import com.vesoft.nebula.client.meta.MetaClient
 import com.vesoft.nebula.exchange.config.Type
-import com.vesoft.nebula.meta.{EdgeItem, PropertyType, TagItem}
+import com.vesoft.nebula.meta.{EdgeItem, TagItem}
 import org.apache.log4j.Logger
 
 import scala.collection.JavaConverters._
