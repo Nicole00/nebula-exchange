@@ -62,6 +62,7 @@ trait Processor extends Serializable {
     if (row.isNullAt(index)) return null
 
     val value = row.get(index).toString.trim
+    if (value.equals("") || value.equals(DEFAULT_EMPTY_VALUE)) return null
     PropertyType.findByValue(fieldTypeMap(field)) match {
       case PropertyType.STRING | PropertyType.FIXED_STRING => {
         var stringValue = value
