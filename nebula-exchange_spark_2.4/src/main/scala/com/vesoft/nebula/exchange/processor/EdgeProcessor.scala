@@ -163,22 +163,7 @@ class EdgeProcessor(spark: SparkSession,
         }(Encoders.kryo[Edge])
 
       // streaming write
-      if (streamFlag) {
-        val streamingDataSourceConfig =
-          edgeConfig.dataSourceConfigEntry.asInstanceOf[StreamingDataSourceConfigEntry]
-        val wStream = edgeFrame.writeStream
-        if (edgeConfig.checkPointPath.isDefined)
-          wStream.option("checkpointLocation", edgeConfig.checkPointPath.get)
-
-        wStream
-          .foreachBatch((edges, batchId) => {
-            LOG.info(s">>>>> ${edgeConfig.name} edge start batch ${batchId}.")
-            edges.foreachPartition(processEachPartition _)
-          })
-          .trigger(Trigger.ProcessingTime(s"${streamingDataSourceConfig.intervalSeconds} seconds"))
-          .start()
-          .awaitTermination()
-      } else
+      if (streamFlag) {} else
         edgeFrame.foreachPartition(processEachPartition _)
     }
   }

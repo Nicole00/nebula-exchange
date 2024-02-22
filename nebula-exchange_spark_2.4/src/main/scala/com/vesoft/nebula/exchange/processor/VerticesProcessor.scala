@@ -174,22 +174,7 @@ class VerticesProcessor(spark: SparkSession,
         }(Encoders.kryo[Vertex])
 
       // streaming write
-      if (streamFlag) {
-        val streamingDataSourceConfig =
-          tagConfig.dataSourceConfigEntry.asInstanceOf[StreamingDataSourceConfigEntry]
-        val wStream = vertices.writeStream
-        if (tagConfig.checkPointPath.isDefined)
-          wStream.option("checkpointLocation", tagConfig.checkPointPath.get)
-
-        wStream
-          .foreachBatch((vertexSet, batchId) => {
-            LOG.info(s">>>>> ${tagConfig.name} tag start batch ${batchId}.")
-            vertexSet.foreachPartition(processEachPartition _)
-          })
-          .trigger(Trigger.ProcessingTime(s"${streamingDataSourceConfig.intervalSeconds} seconds"))
-          .start()
-          .awaitTermination()
-      } else
+      if (streamFlag) {} else
         vertices.foreachPartition(processEachPartition _)
     }
   }
